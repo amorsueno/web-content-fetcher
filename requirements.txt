@@ -1,0 +1,2 @@
+scrapling>=0.2.0
+html2text>=2020.1.16
