@@ -1,10 +1,36 @@
 ---
 name: web-content-fetcher
 description: >
-  网页正文内容提取。支持 Jina Reader / Scrapling+html2text / web_fetch 三级降级策略，
+  网页正文内容提取工具。支持 Jina Reader / Scrapling+html2text / 直接抓取 三级降级策略，
   自动返回干净的 Markdown 格式正文，保留标题、链接、图片 URL、列表结构。
-  能读取微信公众号文章（Jina 做不到的场景）。
-  触发条件：用户要抓取某个 URL 的正文内容、读取某篇文章、提取网页内容等。
+  特别支持微信公众号文章（其他方案无法处理的场景）。
+triggers:
+  - "抓取 {url}"
+  - "读取 {url}"
+  - "提取网页内容"
+  - "文章转 markdown"
+  - "网页转 markdown"
+  - "提取.*正文"
+  - "fetch.*content"
+  - "extract.*article"
+  - "read.*url"
+  - "scrape.*page"
+platforms:
+  openclaw: true
+  claude_code: true
+  codex: true
+limitations:
+  - 小红书需要登录态，无法抓取
+  - Jina Reader 有 200次/天 免费配额限制，超限后自动降级到 Scrapling
+  - 部分国内平台可能返回 403，需使用 Scrapling 方案
+supported_sites:
+  wechat: "mp.weixin.qq.com — 使用 div#js_content 选择器"
+  zhihu: "zhuanlan.zhihu.com — 优先 Scrapling"
+  juejin: "juejin.cn — 优先 Scrapling"
+  csdn: "csdn.net — 优先 Scrapling"
+  medium: "medium.com — Scrapling / Jina 均可"
+  substack: "substack.com — Scrapling / Jina 均可"
+  github: "github.com — 直接 web_fetch 即可"
 ---
 
 # Web Content Fetcher — 网页正文提取
@@ -32,7 +58,7 @@ URL
    exec: ~/.openclaw/workspace/skills/web-content-fetcher/scripts/fetch.py <url> 30000
    优点：效果好，能处理复杂网页
    适合：mp.weixin.qq.com、Substack、Medium 等平台
-   
+
    备用：html2text 简化版
    exec: python3 scripts/fetch_simple.py <url> 30000
    适合：普通静态网页
@@ -63,21 +89,21 @@ URL
 ## 安装依赖
 
 ```bash
-/opt/anaconda3/bin/pip install html2text curl_cffi browserforge
+pip install scrapling html2text --break-system-packages
 ```
 
 ## 脚本路径
 
 `scripts/fetch.py` — Scrapling + html2text 提取脚本
 
-调用方式：
+调用方式（假设已克隆到本地）：
 ```bash
-~/.openclaw/workspace/skills/web-content-fetcher/scripts/fetch.py <url> [max_chars]
+python3 scripts/fetch.py <url> [max_chars]
 ```
 
 或使用简化版（无需 scrapling）：
 ```bash
-python3 ~/.openclaw/workspace/skills/web-content-fetcher/scripts/fetch_simple.py <url> [max_chars]
+python3 scripts/fetch_simple.py <url> [max_chars]
 ```
 
 ## 防死循环规则
